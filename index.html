@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Екі Тіл — Шексіз Көкжиек</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body, html { margin:0; padding:0; height:100%; font-family:system-ui, sans-serif; background:#0f2027; color:white; overflow:hidden; }
+    #top-menu { position:fixed; top:0; left:0; right:0; background:rgba(0,0,0,0.6); padding:1rem; text-align:center; z-index:100; backdrop-filter:blur(5px); }
+    #top-menu button { margin:0 1rem; padding:0.8rem 1.5rem; background:#4CAF50; border:none; border-radius:8px; color:white; font-size:1.1rem; cursor:pointer; }
+    #top-menu button:hover { background:#45a049; }
+    .horizontal { height:100vh; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; }
+    section { min-width:100vw; height:100vh; scroll-snap-align:start; display:flex; align-items:center; justify-content:center; text-align:center; padding:2rem; background:linear-gradient(135deg, #203a43, #2c5364); }
+    .content { max-width:1200px; width:100%; }
+    h1 { font-size:4rem; margin:1rem 0; text-shadow:0 0 15px rgba(255,255,255,0.6); }
+    .quiz-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:2rem; margin-top:3rem; }
+    .quiz-card { background:rgba(255,255,255,0.1); border-radius:16px; overflow:hidden; cursor:pointer; transition:0.4s; box-shadow:0 8px 20px rgba(0,0,0,0.4); }
+    .quiz-card:hover { transform:scale(1.05); box-shadow:0 12px 30px rgba(0,0,0,0.6); }
+    .quiz-card img { width:100%; height:180px; object-fit:cover; }
+    .quiz-card h3 { padding:1.2rem; margin:0; font-size:1.6rem; background:rgba(0,0,0,0.3); }
+    .quiz-view { display:none; background:rgba(0,0,0,0.6); position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; }
+    .quiz-container { background:#1e3c72; padding:2.5rem; border-radius:16px; max-width:700px; width:90%; max-height:90vh; overflow-y:auto; text-align:left; }
+    .question { margin:1.5rem 0; font-size:1.4rem; }
+    .option { background:rgba(255,255,255,0.15); padding:1rem; margin:0.8rem 0; border-radius:10px; cursor:pointer; transition:0.3s; }
+    .option:hover { background:rgba(255,255,255,0.3); }
+    .correct { background:#4CAF50 !important; color:white; }
+    .wrong { background:#f44336 !important; color:white; }
+    .progress { font-size:1.3rem; margin-bottom:1rem; text-align:center; }
+    button.close-quiz { margin-top:2rem; padding:1rem 2rem; background:#f44336; border:none; border-radius:8px; color:white; cursor:pointer; font-size:1.2rem; }
+    .fade-in { opacity:0; transform:translateY(40px); transition:1s; }
+    .fade-in.visible { opacity:1; transform:translateY(0); }
+  </style>
+</head>
+<body>
+
+<div id="top-menu">
+  <button onclick="scrollToSection('home')">Меню (Басты бет)</button>
+  <button onclick="scrollToSection('play')">Ойнау</button>
+  <button onclick="scrollToSection('cabinet')">Личный кабинет</button>
+  <div id="user-info" style="display:inline-block; margin-left:2rem;"></div>
+</div>
+
+<div class="horizontal">
+
+  <!-- Басты бет (алдыңғыдай) -->
+  <section id="home">
+    <div class="content">
+      <h1 class="fade-in">Екі Тіл — Шексіз Көкжиек</h1>
+      <p class="fade-in" style="font-size:1.5rem; margin:2rem 0;">Тіл үйрену арқылы жаңа әлем ашыңыз! Викториналар, ойындар, прогресс сақтау мүмкіндігі.</p>
+      <h2 class="fade-in">Мүмкіндіктер</h2>
+      <ul class="fade-in" style="list-style:none; font-size:1.4rem;">
+        <li>→ Әртүрлі тілдер бойынша викториналар</li>
+        <li>→ Прогрессіңізді сақтау (Google аккаунтымен)</li>
+        <li>→ Личный кабинетте статистика</li>
+        <li>→ Күнде жаңа тапсырмалар</li>
+      </ul>
+
+      <!-- Google Sign-In (алдыңғыдай, client_id қойыңыз) -->
+      <div id="auth-section" class="fade-in">
+        <p>Google аккаунтымен тіркеліңіз:</p>
+        <div id="g_id_onload"
+             data-client_id="898722119181-0a72h1f7mcihsim31dpvo8aje66gdsdf.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-logo_alignment="left">
+        </div>
+      </div>
+
+      <div id="profile-section" class="hidden fade-in">
+        <h2>Қош келдіңіз, <span id="user-name"></span>!</h2>
+        <img id="user-pic" style="border-radius:50%; width:120px;" alt="Аватар">
+        <p id="user-email"></p>
+        <button onclick="signOut()">Шығу</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ойнау беті – карточкалар + викториналар -->
+  <section id="play">
+    <div class="content">
+      <h1 class="fade-in">Викториналар</h1>
+      <p class="fade-in" style="font-size:1.3rem; margin-bottom:2rem;">Төмендегі категорияны таңдаңыз және біліміңізді тексеріңіз!</p>
+
+      <div class="quiz-grid fade-in">
+        <div class="quiz-card" onclick="startQuiz('quiz1')">
+          <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80" alt="Сөздік">
+          <h3>Сөздік (Vocabulary Quiz)</h3>
+        </div>
+        <div class="quiz-card" onclick="startQuiz('quiz2')">
+          <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80" alt="Грамматика">
+          <h3>Грамматика (Grammar Quiz)</h3>
+        </div>
+        <div class="quiz-card" onclick="startQuiz('quiz3')">
+          <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80" alt="Тілдер әлемі">
+          <h3>Тілдер әлемі (World Languages)</h3>
+        </div>
+      </div>
+
+      <!-- Викторина поп-аптары (жасырын) -->
+      <div id="quizModal" class="quiz-view">
+        <div class="quiz-container">
+          <h2 id="quizTitle"></h2>
+          <div class="progress" id="progress">Сұрақ 1/10</div>
+          <div id="questionsContainer"></div>
+          <button class="close-quiz" onclick="closeQuiz()">Жабу</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Личный кабинет (алдыңғыдай) -->
+  <section id="cabinet">
+    <div class="content">
+      <h1 class="fade-in">Личный кабинет</h1>
+      <div id="stats" class="fade-in">
+        <p>Әзірге ешқандай статистика жоқ. Викторина өтіп көріңіз!</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ... (Google Sign-In, scrollToSection, fade-in, signOut, showProfile – алдыңғы кодтан көшіріңіз, өзгермеді)
+
+// Викториналар деректері (әрқайсысы 10 сұрақ)
+const quizzes = {
+  quiz1: {
+    title: "Сөздік (Vocabulary Quiz)",
+    questions: [
+      { q: "Қазақша 'Hello' қалай айтылады?", options: ["Сәлем", "Қалайсың?", "Рақмет", "Сау бол"], correct: 0 },
+      { q: "'Book' сөзі қазақша не?", options: ["Кітап", "Қалам", "Үстел", "Орындық"], correct: 0 },
+      { q: "'Friend' деген не?", options: ["Дос", "Жау", "Мұғалім", "Оқушы"], correct: 0 },
+      { q: "'Water' қазақша?", options: ["Су", "От", "Ауа", "Жер"], correct: 0 },
+      { q: "'Family' сөзі қандай мағынада?", options: ["Отбасы", "Мектеп", "Қала", "Ел"], correct: 0 },
+      { q: "'Apple' – бұл?", options: ["Алма", "Банан", "Апельсин", "Жүзім"], correct: 0 },
+      { q: "'School' қазақша?", options: ["Мектеп", "Үй", "Дүкен", "Аурухана"], correct: 0 },
+      { q: "'Love' сөзі қандай?", options: ["Махаббат", "Қорқыныш", "Ашу", "Қуаныш"], correct: 0 },
+      { q: "'House' деген не?", options: ["Үй", "Авто", "Көлік", "Жол"], correct: 0 },
+      { q: "'Happy' қазақша?", options: ["Бақытты", "Қайғылы", "Шаршаған", "Ашуланған"], correct: 0 }
+    ]
+  },
+  quiz2: {
+    title: "Грамматика (Grammar Quiz)",
+    questions: [
+      { q: "I ___ to school every day.", options: ["go", "goes", "going", "gone"], correct: 0 },
+      { q: "She ___ English very well.", options: ["speak", "speaks", "speaking", "spoke"], correct: 1 },
+      { q: "They ___ playing football now.", options: ["is", "are", "am", "be"], correct: 1 },
+      { q: "Yesterday I ___ a book.", options: ["read", "reads", "reading", "readed"], correct: 0 },
+      { q: "This is ___ book.", options: ["my", "mine", "me", "I"], correct: 0 },
+      { q: "He is taller ___ me.", options: ["then", "than", "that", "this"], correct: 1 },
+      { q: "We ___ happy yesterday.", options: ["was", "were", "is", "are"], correct: 1 },
+      { q: "What ___ you doing?", options: ["is", "are", "am", "be"], correct: 1 },
+      { q: "There ___ many books on the table.", options: ["is", "are", "was", "were"], correct: 1 },
+      { q: "She ___ to Paris next year.", options: ["go", "goes", "will go", "going"], correct: 2 }
+    ]
+  },
+  quiz3: {
+    title: "Тілдер әлемі (World Languages)",
+    questions: [
+      { q: "Әлемде қанша тіл бар шамамен?", options: ["7000-нан астам", "500", "2000", "10000"], correct: 0 },
+      { q: "Ең көп сөйлейтін тіл қайсы?", options: ["Ағылшын", "Мандарин қытай", "Испан", "Хинди"], correct: 1 },
+      { q: "Қазақ тілі қай топқа жатады?", options: ["Түркі", "Славян", "Роман", "Герман"], correct: 0 },
+      { q: "Эсперанто деген не?", options: ["Жасанды тіл", "Ежелгі тіл", "Диалект", "Сленг"], correct: 0 },
+      { q: "Sign language – бұл?", options: ["Ышара тілі", "Жазба тілі", "Ауызша тіл", "Музыка тілі"], correct: 0 },
+      { q: "Латын әліпбиін қай тілдер қолданады?", options: ["Көптеген еуропа тілдері", "Араб", "Қытай", "Жапон"], correct: 0 },
+      { q: "Ең қиын тіл қайсы деп есептеледі?", options: ["Мандарин", "Ағылшын", "Испан", "Француз"], correct: 0 },
+      { q: "UNESCO-ның тілдер күні қашан?", options: ["21 ақпан", "8 наурыз", "1 қыркүйек", "31 желтоқсан"], correct: 0 },
+      { q: "Қай елде 800-ден астам тіл бар?", options: ["Папуа-Жаңа Гвинея", "Үндістан", "Қытай", "АҚШ"], correct: 0 },
+      { q: "Ағылшын тілінің туған жері?", options: ["Англия", "Америка", "Австралия", "Канада"], correct: 0 }
+    ]
+  }
+};
+
+let currentQuiz = null;
+let currentQuestion = 0;
+let score = 0;
+
+function startQuiz(id) {
+  currentQuiz = quizzes[id];
+  currentQuestion = 0;
+  score = 0;
+  document.getElementById('quizTitle').textContent = currentQuiz.title;
+  document.getElementById('quizModal').style.display = 'flex';
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = currentQuiz.questions[currentQuestion];
+  let html = `<div class="question">${currentQuestion + 1}. ${q.q}</div>`;
+  q.options.forEach((opt, i) => {
+    html += `<div class="option" onclick="selectAnswer(${i})">${opt}</div>`;
+  });
+  document.getElementById('questionsContainer').innerHTML = html;
+  document.getElementById('progress').textContent = `Сұрақ ${currentQuestion + 1}/10`;
+}
+
+function selectAnswer(index) {
+  const q = currentQuiz.questions[currentQuestion];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach((opt, i) => {
+    opt.style.pointerEvents = 'none';
+    if (i === q.correct) opt.classList.add('correct');
+    if (i === index && index !== q.correct) opt.classList.add('wrong');
+  });
+
+  if (index === q.correct) score++;
+
+  setTimeout(() => {
+    currentQuestion++;
+    if (currentQuestion < 10) {
+      showQuestion();
+    } else {
+      document.getElementById('questionsContainer').innerHTML = `<h2 style="text-align:center;">Аяқталды! Сіздің ұпайыңыз: ${score}/10</h2>`;
+      saveScore(currentQuiz.title, score);
+    }
+  }, 1500);
+}
+
+function closeQuiz() {
+  document.getElementById('quizModal').style.display = 'none';
+  document.getElementById('questionsContainer').innerHTML = '';
+}
+
+// Статистика сақтау (localStorage, алдыңғы функцияларға қосыңыз)
+function saveScore(title, points) {
+  let scores = JSON.parse(localStorage.getItem('scores') || '{}');
+  scores[title] = (scores[title] || 0) + points;
+  localStorage.setItem('scores', JSON.stringify(scores));
+  updateStats(); // Личный кабинетте көрсету үшін
+}
+
+// updateStats функциясын алдыңғы кодтан көшіріңіз немесе осындай етіңіз
+function updateStats() {
+  const scores = JSON.parse(localStorage.getItem('scores') || '{}');
+  let html = '<h3>Сіздің статистикаңыз:</h3>';
+  for (let key in scores) {
+    html += `<p>${key}: ${scores[key]} ұпай (макс 10)</p>`;
+  }
+  document.getElementById('stats').innerHTML = html || '<p>Әзірге ештеңе өткен жоқ.</p>';
+}
+
+// Бастапқы жүктеу
+if (localStorage.getItem('user')) showProfile();
+updateStats();
+
+// Скролл функциясы
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+// Fade-in observer (алдыңғы кодтан)
+const fades = document.querySelectorAll('.fade-in');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+});
+fades.forEach(f => obs.observe(f));
+</script>
+</body>
+</html>
